@@ -5,6 +5,7 @@ import { CalculatorForm } from "@/components/calculator-form";
 import { ResultsDisplay } from "@/components/results-display";
 import { CalculationHistory } from "@/components/calculation-history";
 import { CalculationParams } from "@/utils/calculatorUtils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Index = () => {
   const [calculationParams, setCalculationParams] = useState<CalculationParams | null>(null);
@@ -23,16 +24,21 @@ const Index = () => {
           </p>
         </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="md:col-span-2 space-y-8">
+        <Tabs defaultValue="calculator" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-8">
+            <TabsTrigger value="calculator">Calculator</TabsTrigger>
+            <TabsTrigger value="history">History</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="calculator" className="space-y-8">
             <CalculatorForm onCalculate={handleCalculate} />
             {calculationParams && <ResultsDisplay params={calculationParams} />}
-          </div>
+          </TabsContent>
           
-          <div className="md:col-span-1">
+          <TabsContent value="history">
             <CalculationHistory onSelectHistory={handleCalculate} />
-          </div>
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );
