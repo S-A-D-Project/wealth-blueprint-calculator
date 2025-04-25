@@ -3,17 +3,23 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CalculationHistory, CalculationParams, deleteCalculation, formatCurrency, getCalculationHistory } from "@/utils/calculatorUtils";
+import { 
+  CalculationParams, 
+  deleteCalculation, 
+  formatCurrency, 
+  getCalculationHistory 
+} from "@/utils/calculatorUtils";
 import { useToast } from "@/components/ui/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import type { CalculationHistory as CalculationHistoryType } from "@/utils/calculatorUtils";
 
 interface HistoryProps {
   onSelectHistory: (params: CalculationParams) => void;
 }
 
 export function CalculationHistory({ onSelectHistory }: HistoryProps) {
-  const [history, setHistory] = useState<CalculationHistory[]>([]);
+  const [history, setHistory] = useState<CalculationHistoryType[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
