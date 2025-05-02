@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,28 +5,21 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   CalculationParams, 
   deleteCalculation,
-  formatCurrency
+  formatCurrency,
+  CompoundingFrequency
 } from "@/utils/calculatorUtils";
 import { useToast } from "@/components/ui/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import type { CalculationHistory as CalculationHistoryType } from "@/utils/calculatorUtils";
+import type { Tables } from "@/integrations/supabase/database.types";
 
 interface HistoryProps {
   onSelectHistory: (params: CalculationParams) => void;
 }
 
-interface DatabaseCalculation {
-  id: number;
-  principal: number;
-  rate: number;
-  time: number;
-  frequency: string;
-  final_amount: number;
-  solve_for: string;
-  created_at: string;
-}
+type DatabaseCalculation = Tables["calculations"];
 
 export function CalculationHistory({ onSelectHistory }: HistoryProps) {
   const [history, setHistory] = useState<CalculationHistoryType[]>([]);

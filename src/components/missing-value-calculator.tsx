@@ -203,7 +203,7 @@ export function MissingValueCalculator({ onCalculate, solveFor, setSolveFor }: M
       setValues(prev => ({ ...prev, time: formatResult(result, resultField) }));
     }
 
-    // Prepare calculation data
+    // Prepare calculation data - fix property name to match between app and database
     const calculationData = {
       principal: parseFloat(values.principal || result?.toString() || "0"),
       rate: parseFloat(values.rate || result?.toString() || "0"),
@@ -214,12 +214,24 @@ export function MissingValueCalculator({ onCalculate, solveFor, setSolveFor }: M
       created_at: new Date().toISOString()
     };
 
+    // Convert from database format to app format for the onCalculate callback
+    const appFormatData = {
+      principal: calculationData.principal,
+      rate: calculationData.rate,
+      time: calculationData.time,
+      frequency: calculationData.frequency,
+      finalAmount: calculationData.final_amount
+    };
+
     // Save to local history
-    onCalculate(calculationData, solveFor);
+    onCalculate(appFormatData, solveFor);
 
     // Save to Supabase database
     try {
-      const { error } = await supabase.from('calculations').insert([calculationData]);
+      const { error } = await supabase
+        .from('calculations')
+        .insert([calculationData]);
+      
       if (error) {
         console.error('Failed to save calculation to database:', error);
         toast({
