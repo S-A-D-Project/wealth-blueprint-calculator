@@ -1,56 +1,155 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   CalculationParams, 
-  deleteCalculation, 
-  formatCurrency, 
-  getCalculationHistory 
+  deleteCalculation,
+  formatCurrency
 } from "@/utils/calculatorUtils";
 import { useToast } from "@/components/ui/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 import type { CalculationHistory as CalculationHistoryType } from "@/utils/calculatorUtils";
 
 interface HistoryProps {
   onSelectHistory: (params: CalculationParams) => void;
 }
 
+interface DatabaseCalculation {
+  id: number;
+  principal: number;
+  rate: number;
+  time: number;
+  frequency: string;
+  final_amount: number;
+  solve_for: string;
+  created_at: string;
+}
+
 export function CalculationHistory({ onSelectHistory }: HistoryProps) {
   const [history, setHistory] = useState<CalculationHistoryType[]>([]);
   const [selectedItem, setSelectedItem] = useState<CalculationHistoryType | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
     loadHistory();
   }, []);
 
-  const loadHistory = () => {
-    const calculationHistory = getCalculationHistory();
-    setHistory(calculationHistory);
-  };
+  const loadHistory = async () => {
+    setIsLoading(true);
+    try {
+      // Fetch calculations from Supabase
+      const { data, error } = await supabase
+        .from('calculations')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-  const handleDelete = (id: string) => {
-    deleteCalculation(id);
-    loadHistory();
-    if (selectedItem?.id === id) {
-      setSelectedItem(null);
+      if (error) {
+        throw error;
+      }
+
+      // Transform database results to match the CalculationHistoryType
+      const formattedHistory = (data || []).map((item: DatabaseCalculation) => ({
+        id: item.id.toString(),
+        principal: item.principal,
+        rate: item.rate,
+        time: item.time,
+        frequency: item.frequency as CompoundingFrequency,
+        finalAmount: item.final_amount,
+        totalInterest: item.final_amount - item.principal,
+        yearlyBreakdown: [],
+        formula: calculateFormula(item.frequency as CompoundingFrequency),
+        createdAt: item.created_at
+      }));
+
+      setHistory(formattedHistory);
+    } catch (error) {
+      console.error('Error fetching calculation history:', error);
+      toast({
+        title: "Failed to load history",
+        description: "Could not fetch calculations from the database.",
+        variant: "destructive"
+      });
+      
+      // Fallback to local storage
+      const localHistory = localStorage.getItem('calculationHistory');
+      setHistory(localHistory ? JSON.parse(localHistory) : []);
+    } finally {
+      setIsLoading(false);
     }
-    toast({
-      title: "Calculation deleted",
-      description: "The calculation has been removed from history."
-    });
   };
 
-  const handleClearAll = () => {
-    localStorage.setItem('calculationHistory', JSON.stringify([]));
-    loadHistory();
-    setSelectedItem(null);
-    toast({
-      title: "History cleared",
-      description: "All calculations have been deleted from history."
-    });
+  const calculateFormula = (frequency: CompoundingFrequency): string => {
+    if (frequency === 'continuously') {
+      return 'A = P × e^(rt)';
+    }
+    return 'A = P(1 + r/n)^(nt)';
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      // Delete from database
+      const { error } = await supabase
+        .from('calculations')
+        .delete()
+        .eq('id', parseInt(id));
+
+      if (error) {
+        throw error;
+      }
+
+      // Update local state
+      setHistory(prev => prev.filter(item => item.id !== id));
+      if (selectedItem?.id === id) {
+        setSelectedItem(null);
+      }
+
+      toast({
+        title: "Calculation deleted",
+        description: "The calculation has been removed from history."
+      });
+    } catch (error) {
+      console.error('Error deleting calculation:', error);
+      toast({
+        title: "Delete failed",
+        description: "Could not delete the calculation.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleClearAll = async () => {
+    try {
+      // Clear all calculations from database
+      const { error } = await supabase
+        .from('calculations')
+        .delete()
+        .neq('id', 0); // Delete all records
+
+      if (error) {
+        throw error;
+      }
+
+      // Update local state
+      setHistory([]);
+      setSelectedItem(null);
+      
+      toast({
+        title: "History cleared",
+        description: "All calculations have been deleted."
+      });
+    } catch (error) {
+      console.error('Error clearing calculations:', error);
+      toast({
+        title: "Clear failed",
+        description: "Could not clear calculation history.",
+        variant: "destructive"
+      });
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -64,7 +163,7 @@ export function CalculationHistory({ onSelectHistory }: HistoryProps) {
       rate: item.rate,
       time: item.time,
       frequency: item.frequency,
-      startDate: item.startDate ? new Date(item.startDate) : null
+      startDate: null
     });
   };
 
@@ -96,7 +195,11 @@ export function CalculationHistory({ onSelectHistory }: HistoryProps) {
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <ScrollArea className="h-72 rounded-md">
-            {history.length === 0 ? (
+            {isLoading ? (
+              <div className="flex justify-center items-center h-full">
+                <p>Loading calculations...</p>
+              </div>
+            ) : history.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 No calculation history yet
               </div>

@@ -209,8 +209,8 @@ export function MissingValueCalculator({ onCalculate, solveFor, setSolveFor }: M
       rate: parseFloat(values.rate || result?.toString() || "0"),
       time: parseFloat(values.time || result?.toString() || "0"),
       frequency: values.frequency,
-      finalAmount: parseFloat(values.finalAmount || result?.toString() || "0"),
-      solveFor,
+      final_amount: parseFloat(values.finalAmount || result?.toString() || "0"),
+      solve_for: solveFor,
       created_at: new Date().toISOString()
     };
 
@@ -219,16 +219,28 @@ export function MissingValueCalculator({ onCalculate, solveFor, setSolveFor }: M
 
     // Save to Supabase database
     try {
-      await supabase.from('calculations').insert([calculationData]);
+      const { error } = await supabase.from('calculations').insert([calculationData]);
+      if (error) {
+        console.error('Failed to save calculation to database:', error);
+        toast({
+          title: "Database Error",
+          description: `Could not save to database: ${error.message}`,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Calculation Complete",
+          description: `The missing value has been calculated: ${formatResult(result!, resultField!)}`,
+        });
+      }
     } catch (error) {
-      // Optionally handle error
       console.error('Failed to save calculation to database:', error);
+      toast({
+        title: "Error",
+        description: "There was an error saving your calculation.",
+        variant: "destructive"
+      });
     }
-
-    toast({
-      title: "Calculation Complete",
-      description: `The missing value has been calculated: ${formatResult(result!, resultField!)}`,
-    });
   };
 
   const resetFields = () => {
@@ -373,4 +385,4 @@ export function MissingValueCalculator({ onCalculate, solveFor, setSolveFor }: M
       </CardContent>
     </Card>
   );
-} 
+}
