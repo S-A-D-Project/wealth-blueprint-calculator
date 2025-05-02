@@ -8,6 +8,7 @@ import {
   calculateMissingTime,
 } from "@/utils/calculatorUtils";
 import { StoredValues, SolveFor } from "@/hooks/use-missing-value-calculator";
+import { Tables } from "@/integrations/supabase/database.types";
 
 export interface NumericValues {
   principal: number | null;
@@ -126,7 +127,8 @@ export async function performCalculation(
   }
 
   // Prepare calculation data for database
-  const calculationData = {
+  const calculationData: Tables["calculations"] = {
+    id: 0, // This will be auto-generated
     principal: parseFloat(values.principal || result?.toString() || "0"),
     rate: parseFloat(values.rate || result?.toString() || "0"),
     time: parseFloat(values.time || result?.toString() || "0"),
@@ -141,7 +143,7 @@ export async function performCalculation(
     principal: calculationData.principal,
     rate: calculationData.rate,
     time: calculationData.time,
-    frequency: calculationData.frequency,
+    frequency: calculationData.frequency as CompoundingFrequency,
     finalAmount: calculationData.final_amount
   };
 
