@@ -1,5 +1,5 @@
-
-import { ThemeToggle } from "./theme-toggle";
+import React from "react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -7,24 +7,49 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-finance-primary to-finance-accent"></div>
-            <h1 className="font-bold text-xl">Wealth Blueprint</h1>
+    <div
+      className="min-h-screen bg-background relative overflow-hidden"
+      style={{
+        backgroundImage: `url('/image.jpg')`,
+        backgroundSize: 'cover',
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center center',
+      }}
+    >
+      {/* Blurred overlay */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          zIndex: 0,
+        }}
+        aria-hidden="true"
+      />
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container flex h-14 items-center justify-between">
+            <div className="mr-4 flex">
+              <h1 className="font-bold text-xl">Compound Interest Calculator</h1>
+            </div>
+            <div className="flex items-center justify-between space-x-2">
+              <ThemeToggle />
+            </div>
           </div>
-          <ThemeToggle />
-        </div>
-      </header>
-      <main className="container mx-auto px-4 py-8">
-        {children}
-      </main>
-      <footer className="border-t">
-        <div className="container mx-auto px-4 py-6 text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} Wealth Blueprint Calculator. All rights reserved.</p>
-        </div>
-      </footer>
+        </header>
+
+        <main className="container py-6">{children}</main>
+
+        <footer className="border-t">
+          <div className="container flex h-14 items-center justify-between text-sm">
+            <p>© {new Date().getFullYear()} Compound Interest Calculator. All rights reserved.</p>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }

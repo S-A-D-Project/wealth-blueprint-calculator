@@ -1,4 +1,3 @@
-
 export type CompoundingFrequency = 
   | 'annually' 
   | 'semi-annually' 
@@ -51,9 +50,9 @@ export const getFrequencyValue = (frequency: CompoundingFrequency): number => {
 
 // Format numbers as currency
 export const formatCurrency = (value: number): string => {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-PH', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'PHP',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(value);
@@ -166,4 +165,48 @@ export const deleteCalculation = (id: string): void => {
 // Clear all calculation history
 export const clearCalculationHistory = (): void => {
   localStorage.setItem('calculationHistory', JSON.stringify([]));
+};
+
+// Calculate missing principal amount
+export const calculateMissingPrincipal = (
+  finalAmount: number,
+  rate: number,
+  time: number,
+  frequency: CompoundingFrequency
+): number => {
+  const n = getFrequencyValue(frequency);
+  return finalAmount / Math.pow(1 + (rate / 100) / n, n * time);
+};
+
+// Calculate missing final amount
+export const calculateMissingFinalAmount = (
+  principal: number,
+  rate: number,
+  time: number,
+  frequency: CompoundingFrequency
+): number => {
+  const n = getFrequencyValue(frequency);
+  return principal * Math.pow(1 + (rate / 100) / n, n * time);
+};
+
+// Calculate missing interest rate
+export const calculateMissingRate = (
+  principal: number,
+  finalAmount: number,
+  time: number,
+  frequency: CompoundingFrequency
+): number => {
+  const n = getFrequencyValue(frequency);
+  return n * (Math.pow(finalAmount / principal, 1 / (n * time)) - 1) * 100;
+};
+
+// Calculate missing time period
+export const calculateMissingTime = (
+  principal: number,
+  finalAmount: number,
+  rate: number,
+  frequency: CompoundingFrequency
+): number => {
+  const n = getFrequencyValue(frequency);
+  return Math.log(finalAmount / principal) / (n * Math.log(1 + (rate / 100) / n));
 };
