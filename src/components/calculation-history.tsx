@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,8 +37,8 @@ export function CalculationHistory({ onSelectHistory }: HistoryProps) {
     try {
       // Fetch calculations from Supabase
       const { data, error } = await supabase
-        .from('calculations')
-        .select('*')
+        .from("calculations")
+        .select("*")
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -86,7 +87,7 @@ export function CalculationHistory({ onSelectHistory }: HistoryProps) {
     try {
       // Delete from database
       const { error } = await supabase
-        .from('calculations')
+        .from("calculations")
         .delete()
         .eq('id', parseInt(id));
 
@@ -118,7 +119,7 @@ export function CalculationHistory({ onSelectHistory }: HistoryProps) {
     try {
       // Clear all calculations from database
       const { error } = await supabase
-        .from('calculations')
+        .from("calculations")
         .delete()
         .neq('id', 0); // Delete all records
 
